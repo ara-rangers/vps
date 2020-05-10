@@ -172,12 +172,19 @@ sed -i 's/#net.ipv4.ip_forward=1/net.ipv4.ip_forward=1/g' /etc/sysctl.conf
 iptables -t nat -I POSTROUTING -s 192.168.100.0/24 -o eth0 -j MASQUERADE
 iptables -t nat -I POSTROUTING -o eth0 -j MASQUERADE
 iptables-save > /etc/iptables.up.rules
-wget -O /etc/network/if-up.d/iptables "https://raw.githubusercontent.com/jm051484/Deb83in1Autoscript/master/iptables"
+wget -O /etc/network/if-up.d/iptables "https://raw.githubusercontent.com/ara-rangers/vps/master/iptables"
 chmod +x /etc/network/if-up.d/iptables
 sed -i 's|LimitNPROC|#LimitNPROC|g' /lib/systemd/system/openvpn@.service
 systemctl daemon-reload
 /etc/init.d/openvpn restart
 
+# openvpn config
+wget -O /etc/openvpn/client.ovpn "https://raw.githubusercontent.com/jm051484/Deb83in1Autoscript/master/client.conf"
+sed -i $MYIP2 /etc/openvpn/client.ovpn;
+echo '<ca>' >> /etc/openvpn/client.ovpn
+cat /etc/openvpn/ca.crt >> /etc/openvpn/client.ovpn
+echo '</ca>' >> /etc/openvpn/client.ovpn
+cp client.ovpn /home/vps/public_html/
 
 # Badvpn
 echo "#!/bin/bash
