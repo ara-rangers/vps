@@ -193,7 +193,7 @@ systemctl daemon-reload
 
 # openvpn config
 wget -O /etc/openvpn/client.ovpn "https://raw.githubusercontent.com/ara-rangers/vps/master/client.conf"
-sed -i $MYIP2 /etc/openvpn/client.ovpn;
+sed -i $myip /etc/openvpn/client.ovpn;
 echo '<ca>' >> /etc/openvpn/client.ovpn
 cat /etc/openvpn/ca.crt >> /etc/openvpn/client.ovpn
 echo '</ca>' >> /etc/openvpn/client.ovpn
