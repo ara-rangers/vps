@@ -260,7 +260,7 @@ service openvpn restart
 service dropbear restart
 service nginx restart
 service webmin restart
-service squid3 restart
+service squid restart
 service fail2ban restart
 service freeradius restart
 clear
