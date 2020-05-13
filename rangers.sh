@@ -254,7 +254,6 @@ echo "@reboot /usr/local/bin/BlockTorrentEveryReboot" >> mycron
 crontab mycron
 rm mycron
 # restart service
-badvpn start
 service stunnel4 restart
 service ssh restart
 service openvpn restart
