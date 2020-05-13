@@ -98,7 +98,7 @@ chmod +x /usr/local/bin/trial
 
 # fail2ban & exim & protection
 apt-get install -y grepcidr
-apt-get -y install fail2ban sysv-rc-conf dnsutils dsniff zip unzip;
+apt-get -y install tcpdump fail2ban sysv-rc-conf dnsutils dsniff zip unzip;
 wget https://github.com/jgmdev/ddos-deflate/archive/master.zip;unzip master.zip;
 cd ddos-deflate-master && ./install.sh
 service exim4 stop;sysv-rc-conf exim4 off;
@@ -196,68 +196,22 @@ systemctl daemon-reload
 /etc/init.d/openvpn restart
 
 # openvpn config
-wget -O /etc/openvpn/client.ovpn "https://raw.githubusercontent.com/jm051484/Deb83in1Autoscript/master/client.conf"
+wget -O /etc/openvpn/client.ovpn "https://raw.githubusercontent.com/ara-rangers/vps/master/client.conf"
 sed -i $MYIP2 /etc/openvpn/client.ovpn;
 echo '<ca>' >> /etc/openvpn/client.ovpn
 cat /etc/openvpn/ca.crt >> /etc/openvpn/client.ovpn
 echo '</ca>' >> /etc/openvpn/client.ovpn
 cp client.ovpn /home/vps/public_html/
 
-# Badvpn
-echo "#!/bin/bash
-if [ "'$1'" == start ]
-then
-badvpn-udpgw --listen-addr 127.0.0.1:7300 --max-clients 1000 --max-connections-for-client 10 > /dev/null &
-echo 'Badvpn Run On Port 7300'
+# install badvpn
+cd
+wget -O /usr/bin/badvpn-udpgw "https://github.com/ara-rangers/vps/raw/master/badvpn-udpgw"
+if [ "$OS" == "x86_64" ]; then
+  wget -O /usr/bin/badvpn-udpgw "https://github.com/ara-rangers/vps/raw/master/badvpn-udpgw64"
 fi
-if [ "'$1'" == stop ]
-then
-badvpnpid="'$(ps x |grep badvpn |grep -v grep |awk '"{'"'print $1'"'})
-kill -9 "'"$badvpnpid" >/dev/null 2>/dev/null
-kill $badvpnpid > /dev/null 2> /dev/null
-kill "$badvpnpid" > /dev/null 2>/dev/null''
-kill $(ps x |grep badvpn |grep -v grep |awk '"{'"'print $1'"'})
-killall badvpn-udpgw
-fi" > /bin/badvpn
-chmod +x /bin/badvpn
-if [ -f /usr/local/bin/badvpn-udpgw ]; then
-echo -e "\033[1;32mBadvpn Installing\033[0m"
-exit
-else
-clear
-fi
-if [ -f /usr/bin/badvpn-udpgw ]; then
-echo -e "\033[1;32mBadvpn Installing\033[0m"
-exit
-else
-clear
-fi
-echo -e "\033[1;31m           Installing Badvpn\n\033[1;37mInstalling gcc Cmake make g++ openssl etc...\033[0m"
-apt-get update >/dev/null 2>/dev/null
-apt-get install -y nano >/dev/null 2>/dev/null
-apt-get install -y sudo >/dev/null 2>/dev/null
-apt-get install -y gcc >/dev/null 2>/dev/null
-apt-get install -y make >/dev/null 2>/dev/null
-apt-get install -y g++ >/dev/null 2>/dev/null
-apt-get install -y openssl >/dev/null 2>/dev/null
-apt-get install -y build-essential >/dev/null 2>/dev/null
-apt-get install -y cmake >/dev/null 2>/dev/null
-echo -e "\033[1;37mDownloading File Badvpn"; cd
-wget http://rgv.rangersvpn.xyz/script/badvpn-1.999.128.tar.bz2 -o /dev/null
-echo -e "Extract Badvpn"
-tar -xf badvpn-1.999.128.tar.bz2
-echo -e "Setup configuration"
-mkdir /etc/badvpn-install
-cd /etc/badvpn-install
-cmake ~/badvpn-1.999.128 -DBUILD_NOTHING_BY_DEFAULT=1 -DBUILD_UDPGW=1 >/dev/null 2>/dev/null
-echo -e "Compile Badvpn\033[0m"
-make install
-clear
-echo -e "\033[1;32m             Installation Complete\033[0m" 
-echo -e "\033[1;37mCommand:\n\033[1;31mbadvpn start\033[1;37m Run Badvpn Service"
-echo -e "\033[1;31mbadvpn stop \033[1;37m Stop Badvpn Service\033[0m"
-rm -rf /etc/badvpn-install
-cd ; rm -rf badvpn.sh badvpn-1.999.128/ badvpn-1.999.128.tar.bz2 >/dev/null 2>/dev/null
+sed -i '$ i\screen -AmdS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7300' /etc/rc.local
+chmod +x /usr/bin/badvpn-udpgw
+screen -AmdS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7300
 
 # Stunnel
 apt-get install stunnel4 -y
@@ -280,14 +234,6 @@ sed -i "s/\$language = 'nl';/\$language = 'en';/g" config.php
 sed -i "s/Internal/Internet/g" config.php
 sed -i "/SixXS IPv6/d" config.php
 service vnstat restart
-
-# openvpn config
-wget -O /etc/openvpn/client.ovpn "https://raw.githubusercontent.com/ara-rangers/vps/master/client.conf"
-sed -i $MYIP2 /etc/openvpn/client.ovpn;
-echo '<ca>' >> /etc/openvpn/client.ovpn
-cat /etc/openvpn/ca.crt >> /etc/openvpn/client.ovpn
-echo '</ca>' >> /etc/openvpn/client.ovpn
-cp client.ovpn /home/vps/public_html/
 
 echo "UPDATE AND INSTALL COMPLETE COMPLETE 99% BE PATIENT"
 rm *.sh;rm *.txt;rm *.tar;rm *.deb;rm *.asc;rm *.zip;rm ddos*;
@@ -324,6 +270,7 @@ service squid3 restart
 service fail2ban restart
 service freeradius restart
 clear
+
 # softether
 apt install build-essential -y;
 cd && wget https://github.com/SoftEtherVPN/SoftEtherVPN_Stable/releases/download/v4.28-9669-beta/softether-vpnserver-v4.28-9669-beta-2018.09.11-linux-x64-64bit.tar.gz
@@ -346,7 +293,7 @@ echo "----------------------------------------"  | tee -a log-install.txt
 echo "POWER BY RANGERSVPN CALL +601126996292"  | tee -a log-install.txt
 echo "nginx : http://$myip:80"   | tee -a log-install.txt
 echo "Webmin : http://$myip:10000/"  | tee -a log-install.txt
-echo "OpenVPN  : TCP 443 (client config : http://$myip/client.ovpn)"  | tee -a log-install.txt
+echo "OpenVPN  : TCP 1194 (client config : http://$myip/client.ovpn)"  | tee -a log-install.txt
 echo "Badvpn UDPGW : 7300"   | tee -a log-install.txt
 echo "Stunnel SSL/TLS : 442"   | tee -a log-install.txt
 echo "Squid3 : 3128,3129,8080,8000,9999"  | tee -a log-install.txt
