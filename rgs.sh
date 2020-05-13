@@ -150,9 +150,8 @@ sed -i 's|export KEY_OU="MyOrganizationalUnit"|export KEY_OU="Personal"|' /etc/o
 sed -i 's|export KEY_NAME="EasyRSA"|export KEY_NAME="rangersvpn"|' /etc/openvpn/easy-rsa/vars
 sed -i 's|export KEY_OU=changeme|export KEY_OU=rangersvpn|' /etc/openvpn/easy-rsa/vars
 
-# Create Diffie-Helman Pem
+#Create Diffie-Helman Pem
 openssl dhparam -out /etc/openvpn/dh2048.pem 2048
-
 # Create PKI
 cd /etc/openvpn/easy-rsa
 cp openssl-1.0.0.cnf openssl.cnf
@@ -160,43 +159,103 @@ cp openssl-1.0.0.cnf openssl.cnf
 ./clean-all
 export EASY_RSA="${EASY_RSA:-.}"
 "$EASY_RSA/pkitool" --initca $*
-
-# Create key server
+# create key server
 export EASY_RSA="${EASY_RSA:-.}"
 "$EASY_RSA/pkitool" --server server
-
-# Setting KEY CN
+# setting KEY CN
 export EASY_RSA="${EASY_RSA:-.}"
 "$EASY_RSA/pkitool" client
-
-# cp /etc/openvpn/easy-rsa/keys/{server.crt,server.key,ca.crt} /etc/openvpn
 cd
+openvpn --genkey --secret /etc/openvpn/server/ta.key
+#cp /etc/openvpn/easy-rsa/keys/{server.crt,server.key} /etc/openvpn
 cp /etc/openvpn/easy-rsa/keys/server.crt /etc/openvpn/server.crt
 cp /etc/openvpn/easy-rsa/keys/server.key /etc/openvpn/server.key
 cp /etc/openvpn/easy-rsa/keys/ca.crt /etc/openvpn/ca.crt
+cp /etc/openvpn/easy-rsa/keys/ta.key /etc/openvpn/ta.key
 chmod +x /etc/openvpn/ca.crt
 
-# server settings
-cd /etc/openvpn/
-wget -O /etc/openvpn/server.conf "https://raw.githubusercontent.com/ara-rangers/vps/master/server.conf"
+# Setting Server
+tar -xzvf /root/plugin.tgz -C /usr/lib/openvpn/
+chmod +x /usr/lib/openvpn/*
+cat > /etc/openvpn/server.conf <<-END
+port 1147
+tls-server
+proto tcp
+dev tun
+ca ca.crt
+cert server.crt
+key server.key
+dh dh2048.pem
+tls-auth ta.key
+verify-client-cert none
+username-as-common-name
+plugin /usr/lib/openvpn/plugins/openvpn-plugin-auth-pam.so login
+server 192.168.10.0 255.255.255.0
+ifconfig-pool-persist ipp.txt
+push "redirect-gateway def1 bypass-dhcp"
+push "dhcp-option DNS 8.8.8.8"
+push "dhcp-option DNS 8.8.4.4"
+push "route-method exe"
+push "route-delay 2"
+socket-flags TCP_NODELAY
+push "socket-flags TCP_NODELAY"
+keepalive 10 120
+comp-lzo
+user nobody
+group nogroup
+persist-key
+persist-tun
+status openvpn-status.log
+log openvpn.log
+verb 3
+ncp-disable
+cipher AES-128-GCM
+auth SHA256
+END
 systemctl start openvpn@server
-sysctl -w net.ipv4.ip_forward=1
-sed -i 's/#net.ipv4.ip_forward=1/net.ipv4.ip_forward=1/g' /etc/sysctl.conf
-iptables -t nat -I POSTROUTING -s 192.168.100.0/24 -o eth0 -j MASQUERADE
-iptables -t nat -I POSTROUTING -o eth0 -j MASQUERADE
-iptables-save > /etc/iptables.up.rules
-wget -O /etc/network/if-up.d/iptables "https://raw.githubusercontent.com/ara-rangers/vps/master/iptables"
-chmod +x /etc/network/if-up.d/iptables
-sed -i 's|LimitNPROC|#LimitNPROC|g' /lib/systemd/system/openvpn@.service
-systemctl daemon-reload
-/etc/init.d/openvpn restart
 
-# openvpn config
-wget -O /etc/openvpn/client.ovpn "https://raw.githubusercontent.com/ara-rangers/vps/master/client.conf"
-sed -i $myip /etc/openvpn/client.ovpn;
-echo '<ca>' >> /etc/openvpn/client.ovpn
-cat /etc/openvpn/ca.crt >> /etc/openvpn/client.ovpn
-echo '</ca>' >> /etc/openvpn/client.ovpn
+#Create OpenVPN Config
+mkdir -p /home/vps/public_html
+
+#openvpn default
+cat > /home/vps/public_html/client.ovpn <<-END
+auth-user-pass
+client
+dev tun
+proto tcp
+remote $myip 1194
+http-proxy $myip 8080
+http-proxy-retry
+persist-key
+persist-tun
+resolv-retry infinite
+#tls-client
+#tls-auth ta.key 1
+comp-lzo
+remote-cert-tls server
+nobind
+verb 3
+mute 2
+connect-retry 0 1
+connect-retry-max 3355
+mute-replay-warnings
+redirect-gateway def1
+script-security 2
+cipher AES-128-GCM
+auth SHA256
+END
+echo '<ca>' >> /home/vps/public_html/client.ovpn
+cat /etc/openvpn/ca.crt >> /home/vps/public_html/client.ovpn
+echo '</ca>' >> /home/vps/public_html/client.ovpn
+echo '<cert>' >> /home/vps/public_html/client.ovpn
+cat /etc/openvpn/server.crt >> /home/vps/public_html/client.ovpn
+echo '</cert>' >> /home/vps/public_html/client.ovpn
+echo '<key>' >> /home/vps/public_html/client.ovpn
+cat /etc/openvpn/server.key >> /home/vps/public_html/client.ovpn
+echo '</key>' >> /home/vps/public_html/client.ovpn
+echo '<tls-auth>' >> /home/vps/public_html/client.ovpn
+cat /etc/openvpn/ta.key >> /home/vps/public_html/client.ovpn
+echo '</tls-auth>' >> /home/vps/public_html/client.ovpn
 cp client.ovpn /home/vps/public_html/
 
 # install badvpn
