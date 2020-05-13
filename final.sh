@@ -123,7 +123,7 @@ wget -O /etc/squid/squid.conf "https://raw.githubusercontent.com/ara-rangers/vps
 sed -i $MYIP2 /etc/squid/squid.conf;
 
 # install webserver
-apt-get -y install nginx php5-fpm php5-cli libexpat1-dev libxml-parser-perl
+apt-get -y install nginx php7-fpm php7-cli libexpat1-dev libxml-parser-perl
 
 # install essential package
 apt-get -y install nano iptables-persistent dnsutils screen whois ngrep unzip unrar
@@ -137,7 +137,16 @@ mkdir -p /home/vps/public_html
 echo "<pre>SETUP BY ARA PM +601126996292</pre>" > /home/vps/public_html/index.php
 echo "<?php phpinfo(); ?>" > /home/vps/public_html/info.php
 wget -O /etc/nginx/conf.d/vps.conf "http://rgv.rangersvpn.xyz/script/vps.conf"
-sed -i 's/listen = \/var\/run\/php5-fpm.sock/listen = 127.0.0.1:9000/g' /etc/php5/fpm/pool.d/www.conf
+sed -i 's/listen = \/var\/run\/php7-fpm.sock/listen = 127.0.0.1:9000/g' /etc/php7/fpm/pool.d/www.conf
+
+# install webserver
+#cd
+#rm /etc/nginx/sites-enabled/default
+#rm /etc/nginx/sites-available/default
+#wget -O /etc/nginx/nginx.conf "https://raw.githubusercontent.com/ara-rangers/vps/master/nginx.conf"
+#mkdir -p /home/vps/public_html
+#echo "<pre>Setup by jm051484</pre>" > /home/vps/public_html/index.html
+#wget -O /etc/nginx/conf.d/vps.conf "https://raw.githubusercontent.com/ara-rangers/vps/master/vps.sh"
 
 # install openvpn
 apt-get -y install openvpn easy-rsa openssl
