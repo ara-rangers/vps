@@ -117,12 +117,10 @@ wget -O /etc/default/dropbear "http://rgv.rangersvpn.xyz/script/dropbear"
 echo "/bin/false" >> /etc/shells
 echo "/usr/sbin/nologin" >> /etc/shells
 
-# squid3
-apt-get -y install squid3
-wget -O /etc/squid3/squid.conf "http://rgv.rangersvpn.xyz/script/squid.conf"
-wget -O /etc/squid/squid.conf "http://rgv.rangersvpn.xyz/script/squid.conf"
-sed -i "s/ipserver/$myip/g" /etc/squid3/squid.conf
-sed -i "s/ipserver/$myip/g" /etc/squid/squid.conf
+# install squid
+apt-get -y install squid
+wget -O /etc/squid/squid.conf "https://raw.githubusercontent.com/ara-rangers/vps/master/squid3.conf"
+sed -i $MYIP2 /etc/squid/squid.conf;
 
 # install webserver
 apt-get -y install nginx php5-fpm php5-cli libexpat1-dev libxml-parser-perl
