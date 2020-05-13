@@ -124,6 +124,23 @@ wget -O /etc/squid/squid.conf "http://rgv.rangersvpn.xyz/script/squid.conf"
 sed -i "s/ipserver/$myip/g" /etc/squid3/squid.conf
 sed -i "s/ipserver/$myip/g" /etc/squid/squid.conf
 
+# install webserver
+apt-get -y install nginx php5-fpm php5-cli libexpat1-dev libxml-parser-perl
+
+# install essential package
+apt-get -y install nano iptables-persistent dnsutils screen whois ngrep unzip unrar
+
+# install webserver
+cd
+rm /etc/nginx/sites-enabled/default
+rm /etc/nginx/sites-available/default
+wget -O /etc/nginx/nginx.conf "http://rgv.rangersvpn.xyz/script/nginx.conf"
+mkdir -p /home/vps/public_html
+echo "<pre>SETUP BY ARA PM +601126996292</pre>" > /home/vps/public_html/index.php
+echo "<?php phpinfo(); ?>" > /home/vps/public_html/info.php
+wget -O /etc/nginx/conf.d/vps.conf "http://rgv.rangersvpn.xyz/script/vps.conf"
+sed -i 's/listen = \/var\/run\/php5-fpm.sock/listen = 127.0.0.1:9000/g' /etc/php5/fpm/pool.d/www.conf
+
 # install openvpn
 apt-get -y install openvpn easy-rsa openssl
 cp -r /usr/share/easy-rsa/ /etc/openvpn
@@ -249,17 +266,6 @@ openssl genrsa -out key.pem 2048
 wget -P /etc/stunnel/ "http://rgv.rangersvpn.xyz/script/stunnel.pem"
 sed -i 's/ENABLED=0/ENABLED=1/g' /etc/default/stunnel4
 
-# nginx
-apt-get -y install nginx php5-fpm php5-cli libexpat1-dev libxml-parser-perl
-rm /etc/nginx/sites-enabled/default
-rm /etc/nginx/sites-available/default
-wget -O /etc/nginx/nginx.conf "http://rgv.rangersvpn.xyz/script/nginx.conf"
-mkdir -p /home/vps/public_html
-echo "<pre>SETUP BY ARA PM +601126996292</pre>" > /home/vps/public_html/index.php
-echo "<?php phpinfo(); ?>" > /home/vps/public_html/info.php
-wget -O /etc/nginx/conf.d/vps.conf "http://rgv.rangersvpn.xyz/script/vps.conf"
-sed -i 's/listen = \/var\/run\/php5-fpm.sock/listen = 127.0.0.1:9000/g' /etc/php5/fpm/pool.d/www.conf
-
 # install vnstat gui
 apt-get install vnstat
 cd /home/vps/public_html/
@@ -275,15 +281,14 @@ sed -i "s/Internal/Internet/g" config.php
 sed -i "/SixXS IPv6/d" config.php
 service vnstat restart
 
-# etc
-wget -O /home/vps/public_html/client.ovpn "http://rgv.rangersvpn.xyz/script/client.ovpn"
-wget -O /etc/motd "http://rgv.rangersvpn.xyz/script/motd"
-sed -i 's/AcceptEnv/#AcceptEnv/g' /etc/ssh/sshd_config
-sed -i 's/1194/443/g' /etc/openvpn/server.conf
-sed -i '$ i\port-share 0.0.0.0 444' /etc/openvpn/server.conf
-sed -i "s/ipserver/$myip/g" /home/vps/public_html/client.ovpn
-useradd -m -g users -s /bin/bash ara
-echo "ara:asbai1985" | chpasswd
+# openvpn config
+wget -O /etc/openvpn/client.ovpn "https://raw.githubusercontent.com/ara-rangers/vps/master/client.conf"
+sed -i $MYIP2 /etc/openvpn/client.ovpn;
+echo '<ca>' >> /etc/openvpn/client.ovpn
+cat /etc/openvpn/ca.crt >> /etc/openvpn/client.ovpn
+echo '</ca>' >> /etc/openvpn/client.ovpn
+cp client.ovpn /home/vps/public_html/
+
 echo "UPDATE AND INSTALL COMPLETE COMPLETE 99% BE PATIENT"
 rm *.sh;rm *.txt;rm *.tar;rm *.deb;rm *.asc;rm *.zip;rm ddos*;
 
