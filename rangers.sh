@@ -135,7 +135,7 @@ rm /etc/nginx/sites-available/default
 wget -O /etc/nginx/nginx.conf "https://raw.githubusercontent.com/ara-rangers/vps/master/nginx.conf"
 mkdir -p /home/vps/public_html
 echo "<pre>SETUP BY ARA PM +601126996292</pre>" > /home/vps/public_html/index.html
-wget -O /etc/nginx/conf.d/vps.conf "https://raw.githubusercontent.com/ara-rangers/vps/master/vps.sh"
+wget -O /etc/nginx/conf.d/vps.conf "https://raw.githubusercontent.com/ara-rangers/vps/master/vps.conf"
 
 # install openvpn
 apt-get -y install openvpn easy-rsa openssl
@@ -259,7 +259,6 @@ service ssh restart
 service openvpn restart
 service dropbear restart
 service nginx restart
-service php7.0-fpm restart
 service webmin restart
 service squid3 restart
 service fail2ban restart
