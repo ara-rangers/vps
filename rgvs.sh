@@ -224,7 +224,7 @@ ca ca.crt
 cert server.crt
 key server.key
 dh dh2048.pem
-tls-auth ta.key
+tls-auth ta.key 0
 verify-client-cert none
 username-as-common-name
 plugin /usr/lib/openvpn/plugins/openvpn-plugin-auth-pam.so login
@@ -267,8 +267,6 @@ http-proxy-retry
 persist-key
 persist-tun
 resolv-retry infinite
-#tls-client
-#tls-auth ta.key 1
 comp-lzo
 remote-cert-tls server
 nobind
@@ -281,6 +279,8 @@ redirect-gateway def1
 script-security 2
 cipher AES-128-GCM
 auth SHA256
+tls-client
+tls-auth ta.key 1
 END
 echo '<ca>' >> /home/vps/public_html/client.ovpn
 cat /etc/openvpn/ca.crt >> /home/vps/public_html/client.ovpn
