@@ -134,12 +134,6 @@ wget -O /etc/issue.net "http://rgv.rangersvpn.xyz/script/banner"
 # setting port ssh
 sed -i 's/Port 22/Port 22/g' /etc/ssh/sshd_config
 
-# dropbear
-apt-get -y install dropbear
-wget -O /etc/default/dropbear "http://rgv.rangersvpn.xyz/script/dropbear"
-echo "/bin/false" >> /etc/shells
-echo "/usr/sbin/nologin" >> /etc/shells
-
 # install dropbear
 apt-get -y install dropbear
 sed -i 's/NO_START=1/NO_START=0/g' /etc/default/dropbear
