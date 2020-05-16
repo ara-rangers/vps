@@ -129,7 +129,7 @@ sed -i 's/ssl=1/ssl=0/g' /etc/webmin/miniserv.conf
 # ssh
 sed -i 's/#Banner/Banner/g' /etc/ssh/sshd_config
 sed -i 's/AcceptEnv/#AcceptEnv/g' /etc/ssh/sshd_config
-wget -O /etc/issue.net "http://rgv.rangersvpn.xyz/script/banner"
+wget -O /etc/issue.net "https://raw.githubusercontent.com/ara-rangers/vps/master/banner"
 
 # setting port ssh
 sed -i 's/Port 22/Port 22/g' /etc/ssh/sshd_config
