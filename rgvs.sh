@@ -92,17 +92,17 @@ INSTALLER PROCESS PLEASE WAIT
 TAKE TIME 5-10 MINUTE
 "
 # script
-wget -O /usr/local/bin/menu "http://rgv.rangersvpn.xyz/script/menu"
-wget -O /usr/local/bin/m "http://rgv.rangersvpn.xyz/script/menu"
-wget -O /usr/local/bin/autokill "http://rgv.rangersvpn.xyz/script/autokill"
-wget -O /usr/local/bin/user-generate "http://rgv.rangersvpn.xyz/script/user-generate"
-wget -O /usr/local/bin/speedtest "http://rgv.rangersvpn.xyz/script/speedtest"
-wget -O /usr/local/bin/user-lock "http://rgv.rangersvpn.xyz/script/user-lock"
-wget -O /usr/local/bin/user-unlock "http://rgv.rangersvpn.xyz/script/user-unlock"
-wget -O /usr/local/bin/auto-reboot "http://rgv.rangersvpn.xyz/script/auto-reboot"
-wget -O /usr/local/bin/user-password "http://rgv.rangersvpn.xyz/script/user-password"
-wget -O /usr/local/bin/trial "http://rgv.rangersvpn.xyz/script/trial"
-wget -O /etc/pam.d/common-password "http://rgv.rangersvpn.xyz/script/common-password"
+wget -O /usr/local/bin/menu "https://raw.githubusercontent.com/ara-rangers/vps/master/menu"
+wget -O /usr/local/bin/m "https://raw.githubusercontent.com/ara-rangers/vps/master/menu"
+wget -O /usr/local/bin/autokill "https://raw.githubusercontent.com/ara-rangers/vps/master/autokill"
+wget -O /usr/local/bin/user-generate "https://raw.githubusercontent.com/ara-rangers/vps/master/user-generate"
+wget -O /usr/local/bin/speedtest "https://raw.githubusercontent.com/ara-rangers/vps/master/speedtest"
+wget -O /usr/local/bin/user-lock "https://raw.githubusercontent.com/ara-rangers/vps/master/user-lock"
+wget -O /usr/local/bin/user-unlock "https://raw.githubusercontent.com/ara-rangers/vps/master/user-unlock"
+wget -O /usr/local/bin/auto-reboot "https://raw.githubusercontent.com/ara-rangers/vps/master/auto-reboot"
+wget -O /usr/local/bin/user-password "https://raw.githubusercontent.com/ara-rangers/vps/master/user-password"
+wget -O /usr/local/bin/trial "https://raw.githubusercontent.com/ara-rangers/vps/master/trial"
+wget -O /etc/pam.d/common-password "https://raw.githubusercontent.com/ara-rangers/vps/master/common-password"
 chmod +x /etc/pam.d/common-password
 chmod +x /usr/local/bin/menu
 chmod +x /usr/local/bin/m
@@ -242,9 +242,9 @@ client = no
 socket = a:SO_REUSEADDR=1
 socket = l:TCP_NODELAY=1
 socket = r:TCP_NODELAY=1
-[ssh]
+[dropbear]
 accept = 442
-connect = 127.0.0.1:22
+connect = 127.0.0.1:443
 END
 
 # make a certificate
@@ -255,10 +255,8 @@ cat key.pem cert.pem >> /etc/stunnel/stunnel.pem
 
 # configure stunnel
 sed -i 's/ENABLED=0/ENABLED=1/g' /etc/default/stunnel4
-cd /etc/stunnel/
-wget -O /etc/stunnel/ssl.conf "https://raw.githubusercontent.com/ara-rangers/vps/master/ssl.conf"
-sed -i $MYIP2 /etc/stunnel/ssl.conf;
-cp ssl.conf /home/vps/public_html/
+/etc/init.d/stunnel4 restart
+
 cd
 
 # install vnstat gui
@@ -285,14 +283,14 @@ apt-get -y install freeradius
 cat /dev/null > /etc/freeradius/users
 echo "ara Cleartext-Password := ara" > /etc/freeradius/users
 # Lock Dropbear Expired ID
-wget -O /usr/local/bin/lockidexp.sh "http://rgv.rangersvpn.xyz/script/lockidexp.sh"
+wget -O /usr/local/bin/lockidexp.sh "https://raw.githubusercontent.com/ara-rangers/vps/master/lockidexp.sh"
 chmod +x /usr/local/bin/lockidexp.sh
 crontab -l > mycron
 echo "1 8 * * * /usr/local/bin/lockidexp.sh" >> mycron
 crontab mycron
 rm mycron
 # BlockTorrent
-wget -O /usr/local/bin/BlockTorrentEveryReboot "http://rgv.rangersvpn.xyz/script/BlockTorrentEveryReboot"
+wget -O /usr/local/bin/BlockTorrentEveryReboot "https://raw.githubusercontent.com/ara-rangers/vps/master/BlockTorrentEveryReboot"
 chmod +x /usr/local/bin/BlockTorrentEveryReboot
 crontab -l > mycron
 echo "@reboot /usr/local/bin/BlockTorrentEveryReboot" >> mycron
