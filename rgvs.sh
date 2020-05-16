@@ -360,9 +360,9 @@ echo "========================================"  | tee -a log-install.txt
 echo "Service Autoscript VPS (RANGERSVPN)"  | tee -a log-install.txt
 echo "----------------------------------------"  | tee -a log-install.txt
 echo "POWER BY RANGERSVPN CALL +601126996292"  | tee -a log-install.txt
-echo "nginx : http://$myip:80"   | tee -a log-install.txt
-echo "Webmin : http://$myip:10000/"  | tee -a log-install.txt
-echo "OpenVPN  : TCP 1194 (client config : http://$myip/client.ovpn)"  | tee -a log-install.txt
+echo "nginx : http://$MYIP2:80"   | tee -a log-install.txt
+echo "Webmin : http://$MYIP2:10000/"  | tee -a log-install.txt
+echo "OpenVPN  : TCP 1194 (client config : http://$MYIP2/client.ovpn)"  | tee -a log-install.txt
 echo "Badvpn UDPGW : 7300"   | tee -a log-install.txt
 echo "Stunnel SSL/TLS : 442"   | tee -a log-install.txt
 echo "Squid3 : 3128,3129,8080,8000,9999"  | tee -a log-install.txt
