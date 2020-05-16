@@ -8,8 +8,22 @@
 # Last Updated: 20-01-2019
 # ******************************************
 # START SCRIPT ( RANGERSVPN )
-myip=`ifconfig | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0' | head -n1`;
-myint=`ifconfig | grep -B1 "inet addr:$myip" | head -n1 | awk '{print $1}'`;
+
+# initializing var
+export DEBIAN_FRONTEND=noninteractive
+OS=`uname -m`;
+MYIP=$(wget -qO- ipv4.icanhazip.com);
+MYIP2="s/xxxxxxxxx/$MYIP/g";
+
+# company name details
+country=MY
+state=MY
+locality=Malaysia
+organization=Personal
+organizationalunit=Personal
+commonname=RangersVPN
+email=rangersvpn@gmail.com
+
 if [ $USER != 'root' ]; then
 echo "Sorry, for run the script please using root user"
 exit 1
@@ -56,17 +70,22 @@ apt-get -y --purge remove apache2*;
 apt-get -y --purge remove sendmail*;
 apt-get -y --purge remove postfix*;
 apt-get -y --purge remove bind*;
+apt-get -y install wget curl
+
 clear
 echo "
 UPDATE AND UPGRADE PROCESS
 
 PLEASE WAIT TAKE TIME 1-5 MINUTE
 "
-sh -c 'echo "deb http://download.webmin.com/download/repository sarge contrib" > /etc/apt/sources.list.d/webmin.list'
+# set repo
+echo 'deb http://download.webmin.com/download/repository sarge contrib' >> /etc/apt/sources.list.d/webmin.list
+wget "http://www.dotdeb.org/dotdeb.gpg"
+cat dotdeb.gpg | apt-key add -;rm dotdeb.gpg
 wget -qO - http://www.webmin.com/jcameron-key.asc | apt-key add -
-apt-get update;
-apt-get -y autoremove;
-apt-get -y install wget curl;
+apt-get update
+apt-get -y install nginx
+apt-get -y install nano iptables-persistent dnsutils screen whois ngrep unzip unrar
 echo "
 INSTALLER PROCESS PLEASE WAIT
 
@@ -97,7 +116,8 @@ chmod +x /usr/local/bin/user-password
 chmod +x /usr/local/bin/trial
 
 # fail2ban & exim & protection
-apt-get install -y grepcidr squid3
+apt-get install -y grepcidr
+apt-get install -y libxml-parser-perl
 apt-get -y install tcpdump fail2ban sysv-rc-conf dnsutils dsniff zip unzip;
 wget https://github.com/jgmdev/ddos-deflate/archive/master.zip;unzip master.zip;
 cd ddos-deflate-master && ./install.sh
@@ -111,55 +131,28 @@ sed -i 's/#Banner/Banner/g' /etc/ssh/sshd_config
 sed -i 's/AcceptEnv/#AcceptEnv/g' /etc/ssh/sshd_config
 wget -O /etc/issue.net "http://rgv.rangersvpn.xyz/script/banner"
 
+# setting port ssh
+sed -i 's/Port 22/Port 22/g' /etc/ssh/sshd_config
+
 # dropbear
 apt-get -y install dropbear
 wget -O /etc/default/dropbear "http://rgv.rangersvpn.xyz/script/dropbear"
 echo "/bin/false" >> /etc/shells
 echo "/usr/sbin/nologin" >> /etc/shells
 
-# install squid3
-cat > /etc/squid/squid.conf <<-END
-acl localhost src 127.0.0.1/32 ::1
-acl to_localhost dst 127.0.0.0/8 0.0.0.0/32 ::1
-acl localnet src 10.0.0.0/8
-acl localnet src 172.16.0.0/12
-acl localnet src 192.168.0.0/16
-acl localnet src fc00::/7
-acl localnet src fe80::/10
-acl SSL_ports port 443
-acl Safe_ports port 80
-acl Safe_ports port 21
-acl Safe_ports port 443
-acl Safe_ports port 70
-acl Safe_ports port 210
-acl Safe_ports port 1025-65535
-acl Safe_ports port 280
-acl Safe_ports port 488
-acl Safe_ports port 591
-acl Safe_ports port 777
-acl CONNECT method CONNECT
-acl SSH dst xxxxxxxxx-xxxxxxxxx/32
-acl SSH dst 103.103.0.118-103.103.0.118/32
-http_access allow SSH
-http_access allow localnet
-http_access allow manager localhost
-http_access deny manager
-http_access allow localhost
-http_access deny all
-http_port 3128
-http_port 3129
-http_port 8000
-http_port 8080
-http_port 9999
-coredump_dir /var/spool/squid
-refresh_pattern ^ftp: 1440 20% 10080
-refresh_pattern ^gopher: 1440 0% 1440
-refresh_pattern -i (/cgi-bin/|\?) 0 0% 0
-refresh_pattern . 0 20% 4320
-visible_hostname rangersvpn.xyz
-END
-sed -i $myip /etc/squid/squid.conf;
+# install dropbear
+apt-get -y install dropbear
+sed -i 's/NO_START=1/NO_START=0/g' /etc/default/dropbear
+sed -i 's/DROPBEAR_PORT=22/DROPBEAR_PORT=443/g' /etc/default/dropbear
+sed -i 's/DROPBEAR_EXTRA_ARGS=/DROPBEAR_EXTRA_ARGS="-p 444"/g' /etc/default/dropbear
+echo "/bin/false" >> /etc/shells
+echo "/usr/sbin/nologin" >> /etc/shells
+/etc/init.d/dropbear restart
 
+# install squid
+apt-get -y install squid
+wget -O /etc/squid/squid.conf "https://raw.githubusercontent.com/ara-rangers/vps/master/squid3.conf"
+sed -i $MYIP2 /etc/squid/squid.conf;
 # install webserver
 apt-get -y install nginx libexpat1-dev libxml-parser-perl
 
@@ -185,11 +178,12 @@ sed -i 's|export KEY_CITY="SanFrancisco"|export KEY_CITY="MY"|' /etc/openvpn/eas
 sed -i 's|export KEY_ORG="Fort-Funston"|export KEY_ORG="Personal"|' /etc/openvpn/easy-rsa/vars
 sed -i 's|export KEY_EMAIL="me@myhost.mydomain"|export KEY_EMAIL="rangersvpn@gmail.com"|' /etc/openvpn/easy-rsa/vars
 sed -i 's|export KEY_OU="MyOrganizationalUnit"|export KEY_OU="Personal"|' /etc/openvpn/easy-rsa/vars
-sed -i 's|export KEY_NAME="EasyRSA"|export KEY_NAME="rangersvpn"|' /etc/openvpn/easy-rsa/vars
-sed -i 's|export KEY_OU=changeme|export KEY_OU=rangersvpn|' /etc/openvpn/easy-rsa/vars
+sed -i 's|export KEY_NAME="EasyRSA"|export KEY_NAME="RangersVPN"|' /etc/openvpn/easy-rsa/vars
+sed -i 's|export KEY_OU=changeme|export KEY_OU=Rangers|' /etc/openvpn/easy-rsa/vars
 
-#Create Diffie-Helman Pem
+# Create Diffie-Helman Pem
 openssl dhparam -out /etc/openvpn/dh2048.pem 2048
+
 # Create PKI
 cd /etc/openvpn/easy-rsa
 cp openssl-1.0.0.cnf openssl.cnf
@@ -197,103 +191,43 @@ cp openssl-1.0.0.cnf openssl.cnf
 ./clean-all
 export EASY_RSA="${EASY_RSA:-.}"
 "$EASY_RSA/pkitool" --initca $*
-# create key server
+
+# Create key server
 export EASY_RSA="${EASY_RSA:-.}"
 "$EASY_RSA/pkitool" --server server
-# setting KEY CN
+
+# Setting KEY CN
 export EASY_RSA="${EASY_RSA:-.}"
 "$EASY_RSA/pkitool" client
+
+# cp /etc/openvpn/easy-rsa/keys/{server.crt,server.key,ca.crt} /etc/openvpn
 cd
-openvpn --genkey --secret /etc/openvpn/server/ta.key
-#cp /etc/openvpn/easy-rsa/keys/{server.crt,server.key} /etc/openvpn
 cp /etc/openvpn/easy-rsa/keys/server.crt /etc/openvpn/server.crt
 cp /etc/openvpn/easy-rsa/keys/server.key /etc/openvpn/server.key
 cp /etc/openvpn/easy-rsa/keys/ca.crt /etc/openvpn/ca.crt
-cp /etc/openvpn/easy-rsa/keys/ta.key /etc/openvpn/ta.key
 chmod +x /etc/openvpn/ca.crt
 
-# Setting Server
-tar -xzvf /root/plugin.tgz -C /usr/lib/openvpn/
-chmod +x /usr/lib/openvpn/*
-cat > /etc/openvpn/server.conf <<-END
-port 1147
-tls-server
-proto tcp
-dev tun
-ca ca.crt
-cert server.crt
-key server.key
-dh dh2048.pem
-tls-auth ta.key 0
-verify-client-cert none
-username-as-common-name
-plugin /usr/lib/openvpn/plugins/openvpn-plugin-auth-pam.so login
-server 192.168.10.0 255.255.255.0
-ifconfig-pool-persist ipp.txt
-push "redirect-gateway def1 bypass-dhcp"
-push "dhcp-option DNS 8.8.8.8"
-push "dhcp-option DNS 8.8.4.4"
-push "route-method exe"
-push "route-delay 2"
-socket-flags TCP_NODELAY
-push "socket-flags TCP_NODELAY"
-keepalive 10 120
-comp-lzo
-user nobody
-group nogroup
-persist-key
-persist-tun
-status openvpn-status.log
-log openvpn.log
-verb 3
-ncp-disable
-cipher AES-128-GCM
-auth SHA256
-END
+# server settings
+cd /etc/openvpn/
+wget -O /etc/openvpn/server.conf "https://raw.githubusercontent.com/ara-rangers/vps/master/server.conf"
 systemctl start openvpn@server
+sysctl -w net.ipv4.ip_forward=1
+sed -i 's/#net.ipv4.ip_forward=1/net.ipv4.ip_forward=1/g' /etc/sysctl.conf
+iptables -t nat -I POSTROUTING -s 192.168.100.0/24 -o eth0 -j MASQUERADE
+iptables -t nat -I POSTROUTING -o eth0 -j MASQUERADE
+iptables-save > /etc/iptables.up.rules
+wget -O /etc/network/if-up.d/iptables "https://raw.githubusercontent.com/ara-rangers/vps/master/iptables"
+chmod +x /etc/network/if-up.d/iptables
+sed -i 's|LimitNPROC|#LimitNPROC|g' /lib/systemd/system/openvpn@.service
+systemctl daemon-reload
+/etc/init.d/openvpn restart
 
-#Create OpenVPN Config
-mkdir -p /home/vps/public_html
-
-#openvpn default
-cat > /home/vps/public_html/client.ovpn <<-END
-auth-user-pass
-client
-dev tun
-proto tcp
-remote $myip 1194
-http-proxy $myip 8080
-http-proxy-retry
-persist-key
-persist-tun
-resolv-retry infinite
-comp-lzo
-remote-cert-tls server
-nobind
-verb 3
-mute 2
-connect-retry 0 1
-connect-retry-max 3355
-mute-replay-warnings
-redirect-gateway def1
-script-security 2
-cipher AES-128-GCM
-auth SHA256
-tls-client
-tls-auth ta.key 1
-END
-echo '<ca>' >> /home/vps/public_html/client.ovpn
-cat /etc/openvpn/ca.crt >> /home/vps/public_html/client.ovpn
-echo '</ca>' >> /home/vps/public_html/client.ovpn
-echo '<cert>' >> /home/vps/public_html/client.ovpn
-cat /etc/openvpn/server.crt >> /home/vps/public_html/client.ovpn
-echo '</cert>' >> /home/vps/public_html/client.ovpn
-echo '<key>' >> /home/vps/public_html/client.ovpn
-cat /etc/openvpn/server.key >> /home/vps/public_html/client.ovpn
-echo '</key>' >> /home/vps/public_html/client.ovpn
-echo '<tls-auth>' >> /home/vps/public_html/client.ovpn
-cat /etc/openvpn/ta.key >> /home/vps/public_html/client.ovpn
-echo '</tls-auth>' >> /home/vps/public_html/client.ovpn
+# openvpn config
+wget -O /etc/openvpn/client.ovpn "https://raw.githubusercontent.com/ara-rangers/vps/master/client.conf"
+sed -i $MYIP2 /etc/openvpn/client.ovpn;
+echo '<ca>' >> /etc/openvpn/client.ovpn
+cat /etc/openvpn/ca.crt >> /etc/openvpn/client.ovpn
+echo '</ca>' >> /etc/openvpn/client.ovpn
 cp client.ovpn /home/vps/public_html/
 
 # install badvpn
@@ -306,12 +240,32 @@ sed -i '$ i\screen -AmdS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7300' /etc/
 chmod +x /usr/bin/badvpn-udpgw
 screen -AmdS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7300
 
-# Stunnel
+# install stunnel
 apt-get install stunnel4 -y
-wget -P /etc/stunnel/ "http://rgv.rangersvpn.xyz/script/stunnel.conf"
+cat > /etc/stunnel/stunnel.conf <<-END
+cert = /etc/stunnel/stunnel.pem
+client = no
+socket = a:SO_REUSEADDR=1
+socket = l:TCP_NODELAY=1
+socket = r:TCP_NODELAY=1
+[ssh]
+accept = 442
+connect = 127.0.0.1:22
+END
+
+# make a certificate
 openssl genrsa -out key.pem 2048
-wget -P /etc/stunnel/ "http://rgv.rangersvpn.xyz/script/stunnel.pem"
+openssl req -new -x509 -key key.pem -out cert.pem -days 1095 \
+-subj "/C=$country/ST=$state/L=$locality/O=$organization/OU=$organizationalunit/CN=$commonname/emailAddress=$email"
+cat key.pem cert.pem >> /etc/stunnel/stunnel.pem
+
+# configure stunnel
 sed -i 's/ENABLED=0/ENABLED=1/g' /etc/default/stunnel4
+cd /etc/stunnel/
+wget -O /etc/stunnel/ssl.conf "https://raw.githubusercontent.com/ara-rangers/vps/master/ssl.conf"
+sed -i $MYIP2 /etc/stunnel/ssl.conf;
+cp ssl.conf /home/vps/public_html/
+cd
 
 # install vnstat gui
 apt-get install vnstat
