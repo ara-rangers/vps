@@ -331,6 +331,30 @@ crontab mycron
 rm mycron
 /usr/local/vpnserver/vpnserver start
 clear
+
+# finishing
+cd
+chown -R www-data:www-data /home/vps/public_html
+/etc/init.d/nginx restart
+/etc/init.d/openvpn restart
+/etc/init.d/cron restart
+/etc/init.d/ssh restart
+/etc/init.d/dropbear restart
+/etc/init.d/fail2ban restart
+/etc/init.d/webmin restart
+/etc/init.d/stunnel4 restart
+/etc/init.d/squid start
+rm -rf ~/.bash_history && history -c
+echo "unset HISTFILE" >> /etc/profile
+
+# grep ports 
+opensshport="$(netstat -ntlp | grep -i ssh | grep -i 0.0.0.0 | awk '{print $4}' | cut -d: -f2)"
+dropbearport="$(netstat -nlpt | grep -i dropbear | grep -i 0.0.0.0 | awk '{print $4}' | cut -d: -f2)"
+stunnel4port="$(netstat -nlpt | grep -i stunnel | grep -i 0.0.0.0 | awk '{print $4}' | cut -d: -f2)"
+openvpnport="$(netstat -nlpt | grep -i openvpn | grep -i 0.0.0.0 | awk '{print $4}' | cut -d: -f2)"
+squidport="$(cat /etc/squid/squid.conf | grep -i http_port | awk '{print $2}')"
+nginxport="$(netstat -nlpt | grep -i nginx| grep -i 0.0.0.0 | awk '{print $4}' | cut -d: -f2)"
+
 # END SCRIPT ( RANGERSVPN )
 echo "========================================"  | tee -a log-install.txt
 echo "Service Autoscript VPS (RANGERSVPN)"  | tee -a log-install.txt
