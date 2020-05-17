@@ -137,8 +137,7 @@ sed -i 's/Port 22/Port 22/g' /etc/ssh/sshd_config
 # install dropbear
 apt-get -y install dropbear
 sed -i 's/NO_START=1/NO_START=0/g' /etc/default/dropbear
-sed -i 's/DROPBEAR_PORT=22/DROPBEAR_PORT=443/g' /etc/default/dropbear
-sed -i 's/DROPBEAR_EXTRA_ARGS=/DROPBEAR_EXTRA_ARGS="-p 444"/g' /etc/default/dropbear
+sed -i 's/DROPBEAR_PORT=22/DROPBEAR_PORT=444/g' /etc/default/dropbear
 echo "/bin/false" >> /etc/shells
 echo "/usr/sbin/nologin" >> /etc/shells
 /etc/init.d/dropbear restart
@@ -215,6 +214,8 @@ chmod +x /etc/network/if-up.d/iptables
 sed -i 's|LimitNPROC|#LimitNPROC|g' /lib/systemd/system/openvpn@.service
 systemctl daemon-reload
 /etc/init.d/openvpn restart
+wget -qO /etc/openvpn/openvpn.bash "https://raw.githubusercontent.com/ara-rangers/vps/master/openvpn.bash"
+chmod +x /etc/openvpn/openvpn.bash
 
 # openvpn config
 wget -O /etc/openvpn/client.ovpn "https://raw.githubusercontent.com/ara-rangers/vps/master/client.conf"
@@ -223,6 +224,8 @@ echo '<ca>' >> /etc/openvpn/client.ovpn
 cat /etc/openvpn/ca.crt >> /etc/openvpn/client.ovpn
 echo '</ca>' >> /etc/openvpn/client.ovpn
 cp client.ovpn /home/vps/public_html/
+
+
 
 # install badvpn
 cd
@@ -354,12 +357,12 @@ echo "----------------------------------------"  | tee -a log-install.txt
 echo "POWER BY RANGERSVPN CALL +601126996292"  | tee -a log-install.txt
 echo "nginx : http://$MYIP:80"   | tee -a log-install.txt
 echo "Webmin : http://$MYIP:10000/"  | tee -a log-install.txt
-echo "OpenVPN  : TCP 1194 (client config : http://$MYIP/client.ovpn)"  | tee -a log-install.txt
+echo "OpenVPN  : TCP 443 (client config : http://$MYIP/client.ovpn)"  | tee -a log-install.txt
 echo "Badvpn UDPGW : 7300"   | tee -a log-install.txt
 echo "Stunnel SSL/TLS : 442"   | tee -a log-install.txt
 echo "Squid3 : 3128,3129,8080,8000,9999"  | tee -a log-install.txt
 echo "OpenSSH : 22"  | tee -a log-install.txt
-echo "Dropbear : 443,444"  | tee -a log-install.txt
+echo "Dropbear : 444"  | tee -a log-install.txt
 echo "Fail2Ban : [on]"  | tee -a log-install.txt
 echo "AntiDDOS : [on]"  | tee -a log-install.txt
 echo "Modify(@aramaiti85)AntiTorrent : [on]"  | tee -a log-install.txt
